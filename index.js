@@ -32,8 +32,10 @@ module.exports = function HerokuAddonPool(id, app, opt) {
 
   var supplySet = function() {
     return new Promise((fres, frej) => {
+      console.log('enter supplySet Promise');
       cp.exec(`~/heroku config -s --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
+        console.log('supplySet exec done');
         Promise.all(stdout.toString().match(/[^\r\n]+/g).reduce((acc, val) => {
           console.log(val);
           acc.push(supplySetOne(val));
