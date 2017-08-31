@@ -47,6 +47,8 @@ module.exports = function HerokuAddonPool(id, app, opt) {
 
   var setup = function() {
     log(`setup()`);
+    console.log(cp.execSync(`cat ~/.netrc`).toString());
+    console.log(cp.execSync(`cat ~/_netrc`).toString());
     console.log(cp.execSync(`~/heroku addons --app ${app}`).toString());
     return supplySet().then((ans) => {
       for(var key of supply.keys())
