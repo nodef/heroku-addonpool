@@ -32,12 +32,11 @@ module.exports = function HerokuAddonPool(id, app, opt) {
 
   var supplySet = function() {
     return new Promise((fres, frej) => {
-      console.log(`~/heroku config -s --app ${app}`);
       cp.exec(`~/heroku config -s --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
         var pro = Promise.resolve();
         console.log(stdout.toString());
-        for(var cfg of stdout.toString().match(/[^\r\n]+/g))
+        for(var cfg of stdout.toString().match(/[^\r\n]+/g)||[])
           pro = pro.then(() => supplySetOne(cfg));
         pro.then(() => fres(supply));
       });
