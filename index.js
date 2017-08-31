@@ -1,6 +1,6 @@
 var cp = require('child_process');
 
-module.exports = function(id, app, opt) {
+module.exports = function HerokuAddonPool(id, app, opt) {
   var unused = [];
   var supply = new Map();
   var removed = new Map();
