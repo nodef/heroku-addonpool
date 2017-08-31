@@ -16,7 +16,7 @@ module.exports = function HerokuAddonPool(id, app, opt) {
       var w = cfg.split('=');
       if(w[0].search(opt.config)<0) return;
       var key = _camel(w[1].substring(0, w[1].length-4));
-      var val = {'value': w[1].substring(1, w[1].length-1));
+      var val = {'value': w[1].substring(1, w[1].length-1)};
       cp.exec(`~/heroku addons:info ${key} --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
         for(var r of stdout.toString().match(/[^\r\n]+/g)) {
