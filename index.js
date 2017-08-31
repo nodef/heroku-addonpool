@@ -23,7 +23,7 @@ module.exports = function HerokuAddonPool(id, app, opt) {
           var k = _camel(r.startsWith('=')? 'name' : r.match(/\S+/g)[0]);
           val[k] = r.substring(r.match(/[\S\s]+(=|:)\s+/g)[0].length);
         }
-        log(`supplySetOne(${key})`);
+        log(`supplySetOne(${key}, ${JSON.stringify(val)})`);
         supply.set(key, val);
         fres(key);
       });
@@ -35,7 +35,6 @@ module.exports = function HerokuAddonPool(id, app, opt) {
       cp.exec(`~/heroku config -s --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
         var pro = Promise.resolve();
-        console.log(stdout.toString());
         for(var cfg of stdout.toString().match(/[^\r\n]+/g)||[])
           pro = pro.then(() => supplySetOne(cfg));
         pro.then(() => fres(supply));
