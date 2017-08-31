@@ -35,6 +35,7 @@ module.exports = function HerokuAddonPool(id, app, opt) {
       cp.exec(`~/heroku config -s --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
         var pro = Promise.resolve();
+        console.log(stdout.toString());
         for(var cfg of stdout.toString().match(/[^\r\n]+/g))
           pro = pro.then(() => supplySetOne(cfg));
         pro.then(() => fres(supply));
