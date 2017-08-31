@@ -1,0 +1,24 @@
+{
+  "name": "heroku-addonpool",
+  "version": "0.0.0",
+  "description": "Manage Addon Pool of an App in Heroku.",
+  "main": "index.js",
+  "scripts": {
+    "test": "exit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wolfram77/node-herokuaddonpool.git"
+  },
+  "keywords": [
+    "heroku",
+    "addon",
+    "pool"
+  ],
+  "author": "wolfram77@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wolfram77/node-herokuaddonpool/issues"
+  },
+  "homepage": "https://github.com/wolfram77/node-herokuaddonpool#readme"
+}
