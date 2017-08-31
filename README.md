@@ -8,35 +8,61 @@ Manage Addon Pool of an App in Heroku.
 var Pool = require('heroku-addonpool');
 // Pool(<id>, <app>, <opt>)
 
-var pool = Pool('postgresql', 'myapp', {
-  'name': 'heroku-postgresql:hobbydev',
+/* Assume "ci-herokuaddonpool" has 2 postgresql addons provisioned.
+ * There are 3 consumers which need access to a postgresql database,
+ * for a limited amount of time. Since we have only 2 available, we
+ * create a pool to enable consumers to acquire (remove) and release
+ * (add) database from the pool. If no database is available in the
+ * pool, a consumer will have to wait (Promise) until the resource
+ * is released by some other consumer.
+ */
+
+var pg = Pool('heroku-postgresql', 'ci-herokuaddonpool', {
   'config': /(HEROKU_POSTGRESQL|DATABASE)\S*URL/g,
   'log': true
 });
 
-// Now say "mpapp" has only 2 heroku-postgresql addons provisioned
-// And, there are a number of PostgreSQL DB URL consumers (>2)
-// Only consumers will be able to remove (get) the database at a time
-// After a consumer is done working with it, it can be added back to pool
-// Another waiting consumer is provided with URL of the PostgreSQL database
-
-pool.setup().then(() => {
-  pool.remove(0).then((ans) => {
-    console.log(`PostgreSQL0 Config Var: ${ans}`);
-    console.log(`PostgreSQL0 URL: ${pool.get(ans)}`);
-    setTimeout(() => pool.add(0), 10000);
-    // add back to pool after 10s
+pg.setup().then(() => {
+  var cona = 'consumer-a';
+  var conb = 'consumer-b';
+  var conc = 'consumer-c';
+  pg.remove(cona).then((ans) => {
+    console.log(ans.name);        // name of the addon
+    console.log(ans.attachments); // app to addon attachments
+    console.log(ans.installedAt); // provision date
+    console.log(ans.owningApp);   // owner app of this addon
+    console.log(ans.plan);        // addon service:plan
+    console.log(ans.price);       // addon price
+    console.log(ans.state);       // addon state
+    console.log(ans.value);       // addon access url
+    console.log(`${cona} has acquired ${ans.name}`);
+    console.log(`-> connection string: ${ans.value}`);
+    // consumer-a uses database for 20s
+    setTimeout(() => {
+      console.log(`${cona} is releasing ${ans.name}`);
+      pg.add(cona);
+    }, 20000);
   }).then(() => {
-    return pool.remove(1);
+    return pg.remove(conb);
   }).then((ans) => {
-    console.log(`PostgreSQL1 Config Var: ${ans}`);
-    console.log(`PostgreSQL1 URL: ${pool.get(ans)}`);
+    console.log(`${conb} has acquired ${ans.name}`);
+    console.log(`-> connection string: ${ans.value}`);
+    // consumer-b uses database for 10s
+    setTimeout(() => {
+      console.log(`${conb} is releasing ${ans.name}`);
+      pg.add(conb);
+    }, 10000);
   }).then(() => {
-    return pool.remove(2);
+    return pg.remove(conc);
   }).then((ans) => {
-    // gets called after consumer 0 adds back (10s later)
-    console.log(`PostgreSQL2 Config Var: ${ans}`);
-    console.log(`PostgreSQL2 URL: ${pool.get(ans)}`);
+    // consumer-c waits for 10s until consumer-b releases
+    console.log(`${conc} has acquired ${ans.name}`);
+    console.log(`-> connection string: ${ans.value}`);
+    // consumer-c uses database for 10s
+    setTimeout(() => {
+      console.log(`${conc} is releasing ${ans.name}`);
+      pg.add(conc);
+    }, 10000);
   });
 });
 ```
