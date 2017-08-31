@@ -15,7 +15,7 @@ module.exports = function HerokuAddonPool(id, app, opt) {
     return new Promise((fres, frej) => {
       var w = cfg.split('=');
       if(w[0].search(opt.config)<0) return;
-      var key = _camel(w[1].substring(0, w[1].length-4));
+      var key = _camel(w[0].substring(0, w[0].length-4));
       var val = {'value': w[1].substring(1, w[1].length-1)};
       cp.exec(`~/heroku addons:info ${key} --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
@@ -32,10 +32,8 @@ module.exports = function HerokuAddonPool(id, app, opt) {
 
   var supplySet = function() {
     return new Promise((fres, frej) => {
-      console.log('enter supplySet Promise');
       cp.exec(`~/heroku config -s --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
-        console.log('supplySet exec done');
         var pro = Promise.resolve();
         for(var cfg of stdout.toString().match(/[^\r\n]+/g))
           pro = pro.then(() => supplySetOne(cfg));
@@ -46,9 +44,6 @@ module.exports = function HerokuAddonPool(id, app, opt) {
 
   var setup = function() {
     log(`setup()`);
-    console.log(cp.execSync(`cat ~/.netrc`).toString());
-    console.log(cp.execSync(`cat ~/_netrc`).toString());
-    console.log(cp.execSync(`~/heroku addons --app ${app}`).toString());
     return supplySet().then((ans) => {
       for(var key of supply.keys())
         unused.push(key);
