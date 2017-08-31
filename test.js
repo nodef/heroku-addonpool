@@ -1,4 +1,4 @@
-var Pool = require('heroku-addonpool');
+var Pool = require('./');
 
 var pg = Pool('heroku-postgresql', 'ci-herokuaddonpool', {
   'config': /(HEROKU_POSTGRESQL|DATABASE)\S*URL/g,
