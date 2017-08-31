@@ -1,4 +1,5 @@
 var cp = require('child_process');
+var _camel = require('lodash.camelcase');
 
 module.exports = function HerokuAddonPool(id, app, opt) {
   var unused = [];
@@ -11,22 +12,32 @@ module.exports = function HerokuAddonPool(id, app, opt) {
   };
 
   var supplySetOne = function(cfg) {
-    var w = cfg.split('=');
-    if(w[0].search(opt.config)<0) return;
-    w[1] = w[1].substring(1, w[1].length-1);
-    log(`supplySetOne(${w[0]})`);
-    supply.set(w[0], w[1]);
-    return w[0];
+    return new Promise((fres, frej) => {
+      var w = cfg.split('=');
+      if(w[0].search(opt.config)<0) return;
+      var key = _camel(w[1].substring(0, w[1].length-4));
+      var val = {'value': w[1].substring(1, w[1].length-1));
+      cp.exec(`~/heroku addons:info ${key} --app ${app}`, (err, stdout) => {
+        if(err) return frej(err);
+        for(var r of stdout.toString().match(/[^\r\n]+/g)) {
+          var k = r.startsWith('=')? 'name' : r.match(/\S+/g);
+          val[k] = r.substring(r.match(/[\S\s]+(=|:)\s+/g));
+        }
+        log(`supplySetOne(${key})`);
+        supply.set(key, val);
+        fres(key);
+      });
+    });
   };
 
   var supplySet = function() {
     return new Promise((fres, frej) => {
       cp.exec(`~/heroku config -s --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
-        var cfgs = stdout.toString();
-        for(var cfg of cfgs.match(/[^\r\n]+/g))
-          supplySetOne(cfg);
-        fres(supply);
+        var pro = Promise.resolve();
+        for(var cfg of stdout.toString().match(/[^\r\n]+/g))
+          pro = pro.then(() => supplySetOne(cfg));
+        pro.then(() => fres(supply));
       });
     });
   };
@@ -55,11 +66,11 @@ module.exports = function HerokuAddonPool(id, app, opt) {
 
   var supplyReset = function(key) {
     log(`supplyReset(${key})`);
+    var plan = supply.get(key).plan;
     return new Promise((fres, frej) => {
-      var res = key.substring(0, key.length-4);
-      cp.exec(`~/heroku addons:destroy ${res} --app ${app} --confirm ${app}`, (err) => {
+      cp.exec(`~/heroku addons:destroy ${key} --app ${app} --confirm ${app}`, (err) => {
         if(err) return frej(err);
-        cp.exec(`~/heroku addons:create ${opt.name} --as ${res} --app ${app}`, (err) => {
+        cp.exec(`~/heroku addons:create ${plan} --as ${key} --app ${app}`, (err) => {
           if(err) return frej(err);
           supplySet().then((ans) => {
             fres(ans.get(key));
