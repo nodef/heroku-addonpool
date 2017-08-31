@@ -15,13 +15,13 @@ module.exports = function HerokuAddonPool(id, app, opt) {
     return new Promise((fres, frej) => {
       var w = cfg.split('=');
       if(w[0].search(opt.config)<0) return;
-      var key = w[0].substring(0, w[0].length-4);
+      var key = _camel(w[1].substring(0, w[1].length-4));
       var val = {'value': w[1].substring(1, w[1].length-1)};
       cp.exec(`~/heroku addons:info ${key} --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
         for(var r of stdout.toString().match(/[^\r\n]+/g)) {
-          var k = _camel(r.startsWith('=')? 'name' : r.match(/\S+/g)[0]);
-          val[k] = r.substring(r.match(/[\S\s]+(=|:)\s+/g)[0].length);
+          var k = r.startsWith('=')? 'name' : r.match(/\S+/g);
+          val[k] = r.substring(r.match(/[\S\s]+(=|:)\s+/g));
         }
         log(`supplySetOne(${key})`);
         supply.set(key, val);
@@ -35,7 +35,6 @@ module.exports = function HerokuAddonPool(id, app, opt) {
       cp.exec(`~/heroku config -s --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
         var pro = Promise.resolve();
-        console.log(stdout.toString());
         for(var cfg of stdout.toString().match(/[^\r\n]+/g))
           pro = pro.then(() => supplySetOne(cfg));
         pro.then(() => fres(supply));
