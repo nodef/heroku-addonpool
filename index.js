@@ -60,7 +60,7 @@ module.exports = function HerokuAddonPool(id, app, opt) {
       var key = unused.shift();
       removed.set(ref, key);
       log(`remove:getFromUnused(${ref}, ${key})`);
-      fres(key);
+      fres(supply.get(key));
     });
   };
 

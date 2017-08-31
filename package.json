@@ -1,6 +1,6 @@
 {
   "name": "heroku-addonpool",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "Manage Addon Pool of an App in Heroku.",
   "main": "index.js",
   "scripts": {
