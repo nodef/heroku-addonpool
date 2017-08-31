@@ -20,8 +20,8 @@ module.exports = function HerokuAddonPool(id, app, opt) {
       cp.exec(`~/heroku addons:info ${key} --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
         for(var r of stdout.toString().match(/[^\r\n]+/g)) {
-          var k = _camel(r.startsWith('=')? 'name' : r.match(/\S+/g));
-          val[k] = r.substring(r.match(/[\S\s]+(=|:)\s+/g));
+          var k = _camel(r.startsWith('=')? 'name' : r.match(/\S+/g)[0]);
+          val[k] = r.substring(r.match(/[\S\s]+(=|:)\s+/g)[0].length);
         }
         log(`supplySetOne(${key})`);
         supply.set(key, val);
