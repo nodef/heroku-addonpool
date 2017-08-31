@@ -1,42 +1,18 @@
-# heroku-addonpool
-
-[![NPM](https://nodei.co/npm/heroku-addonpool.png)](https://nodei.co/npm/heroku-addonpool/)
-
-Manage Addon Pool of an App in Heroku.
-
-```javascript
 var Pool = require('heroku-addonpool');
-// Pool(<id>, <app>, <opt>)
-
-/* Assume "ci-herokuaddonpool" has 2 postgresql addons provisioned.
- * There are 3 consumers which need access to a postgresql database,
- * for a limited amount of time. Since we have only 2 available, we
- * create a pool to enable consumers to acquire (remove) and release
- * (add) database from the pool. If no database is available in the
- * pool, a consumer will have to wait (Promise) until the resource
- * is released by some other consumer.
- */
 
 var pg = Pool('heroku-postgresql', 'ci-herokuaddonpool', {
   'config': /(HEROKU_POSTGRESQL|DATABASE)\S*URL/g,
   'log': true
 });
 
+var tcona, tconb, tconc;
 pg.setup().then((ans) => {
   var cona = 'consumer-a';
   var conb = 'consumer-b';
   var conc = 'consumer-c';
-  console.log(ans);      // available addons (Map)
-  console.log(ans.size); // number of addons
+  var supplies = ans.size;
   pg.remove(cona).then((ans) => {
-    console.log(ans.name);        // name of the addon
-    console.log(ans.attachments); // app to addon attachments
-    console.log(ans.installedAt); // provision date
-    console.log(ans.owningApp);   // owner app of this addon
-    console.log(ans.plan);        // addon service:plan
-    console.log(ans.price);       // addon price
-    console.log(ans.state);       // addon state
-    console.log(ans.value);       // addon access url
+    tcona = Date.now();
     console.log(`${cona} has acquired ${ans.name}`);
     console.log(`-> connection string: ${ans.value}`);
     // consumer-a uses database for 20s
@@ -47,6 +23,7 @@ pg.setup().then((ans) => {
   }).then(() => {
     return pg.remove(conb);
   }).then((ans) => {
+    tconb = Date.now();
     console.log(`${conb} has acquired ${ans.name}`);
     console.log(`-> connection string: ${ans.value}`);
     // consumer-b uses database for 10s
@@ -58,6 +35,9 @@ pg.setup().then((ans) => {
     return pg.remove(conc);
   }).then((ans) => {
     // consumer-c waits for 10s until consumer-b releases
+    tconc = Date.now();
+    var tdiff = tconc - tconb;
+    assert.ok(tdiff>=10000 && tdiff<=20000);
     console.log(`${conc} has acquired ${ans.name}`);
     console.log(`-> connection string: ${ans.value}`);
     // consumer-c uses database for 10s
@@ -67,4 +47,3 @@ pg.setup().then((ans) => {
     }, 10000);
   });
 });
-```
