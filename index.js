@@ -6,6 +6,9 @@ module.exports = function HerokuAddonPool(id, app, opt) {
   var supply = new Map();
   var removed = new Map();
   var pending = new Map();
+  var opt = opt||{};
+  opt.config = opt.config||/\S*/g;
+  opt.log = opt.log||false;
 
   var log = function(msg) {
     if(opt.log) console.log(`${id}.${msg}`);
