@@ -23,7 +23,7 @@ module.exports = function HerokuAddonPool(id, app, opt) {
           var k = _camel(r.startsWith('=')? 'name' : r.split(':')[0]);
           val[k] = r.substring(r.match(/[\S\s]+(=|:)\s+/g)[0].length);
         }
-        log(`supplySetOne(${key}, ${JSON.stringify(val)})`);
+        log(`supplySetOne(${key})`);
         supply.set(key, val);
         fres(key);
       });
