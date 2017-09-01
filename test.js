@@ -1,3 +1,4 @@
+var assert = require('assert');
 var Pool = require('./');
 
 var pg = Pool('heroku-postgresql', 'ci-herokuaddonpool', {
