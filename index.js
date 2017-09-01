@@ -36,7 +36,7 @@ module.exports = function HerokuAddonPool(id, app, opt) {
         if(err) return frej(err);
         var pro = Promise.resolve();
         for(var cfg of stdout.toString().match(/[^\r\n]+/g)||[])
-          pro = pro.then(() => supplySetOne(cfg));
+          ((val) => pro = pro.then(() => supplySetOne(val)))(cfg);
         pro.then(() => fres(supply));
       });
     });
