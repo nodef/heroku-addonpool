@@ -38,7 +38,7 @@ pg.setup().then((ans) => {
     // consumer-c waits for 10s until consumer-b releases
     tconc = Date.now();
     var tdiff = tconc - tconb;
-    assert.ok(tdiff>=10000 && tdiff<=20000);
+    if(supplies===2) assert.ok(tdiff>=10000 && tdiff<=20000);
     console.log(`${conc} has acquired ${ans.name}`);
     console.log(`-> connection string: ${ans.value}`);
     // consumer-c uses database for 10s
