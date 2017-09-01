@@ -110,9 +110,5 @@ module.exports = function HerokuAddonPool(id, app, opt) {
     return Promise.resolve(ref);
   };
 
-  var get = function(key) {
-    return supply.get(key);
-  };
-
-  return {get, add, remove, setup};
+  return {add, remove, setup};
 };
