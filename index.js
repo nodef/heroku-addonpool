@@ -1,25 +1,26 @@
-var cp = require('child_process');
-var _camel = require('lodash.camelcase');
+'use strict';
+const cp = require('child_process');
+const _camel = require('lodash.camelcase');
 
 module.exports = function HerokuAddonPool(id, app, opt) {
-  var unused = [];
-  var supply = new Map();
-  var removed = new Map();
-  var pending = new Map();
-  var opt = opt||{};
+  const unused = [];
+  const supply = new Map();
+  const removed = new Map();
+  const pending = new Map();
+  opt = opt||{};
   opt.config = opt.config||/\S*/g;
   opt.log = opt.log||false;
 
-  var log = function(msg) {
+  const log = function(msg) {
     if(opt.log) console.log(`${id}.${msg}`);
   };
 
-  var supplySetOne = function(cfg) {
+  const supplySetOne = function(cfg) {
     return new Promise((fres, frej) => {
-      var w = cfg.split('=');
+      const w = cfg.split('=');
       if(w[0].search(opt.config)<0) return;
-      var key = w[0].substring(0, w[0].length-4);
-      var val = {'value': w[1].substring(1, w[1].length-1)};
+      const key = w[0].substring(0, w[0].length-4);
+      const val = {'value': w[1].substring(1, w[1].length-1)};
       cp.exec(`~/heroku addons:info ${key} --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
         for(var r of stdout.toString().match(/[^\r\n]+/g)) {
@@ -32,7 +33,7 @@ module.exports = function HerokuAddonPool(id, app, opt) {
     });
   };
 
-  var supplySet = function() {
+  const supplySet = function() {
     return new Promise((fres, frej) => {
       cp.exec(`~/heroku config -s --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
@@ -44,7 +45,7 @@ module.exports = function HerokuAddonPool(id, app, opt) {
     });
   };
 
-  var setup = function() {
+  const setup = function() {
     log(`setup()`);
     return supplySet().then((ans) => {
       for(var key of supply.keys()) {
@@ -55,56 +56,55 @@ module.exports = function HerokuAddonPool(id, app, opt) {
     });
   };
 
-  var remove = function(ref) {
+  const remove = function(ref) {
     return new Promise((fres) => {
       if(unused.length===0) {
-        log(`remove:addToPending(${ref})`);
+        log(`remove:addPending(${ref})`);
         return pending.set(ref, fres);
       }
-      var key = unused.shift();
+      const key = unused.shift();
       removed.set(ref, key);
-      log(`remove:getFromUnused(${ref}, ${key})`);
+      log(`remove:getUnused(${ref}, ${key})`);
       fres(supply.get(key));
     });
   };
 
-  var supplyReset = function(key) {
+  const supplyReset = function(key) {
     log(`supplyReset(${key})`);
-    var plan = supply.get(key).plan;
-    return new Promise((fres, frej) => {
-      cp.exec(`~/heroku addons:destroy ${key} --app ${app} --confirm ${app}`, (err) => {
-        if(err) return frej(err);
-        cp.exec(`~/heroku addons:create ${plan} --as ${key} --app ${app}`, (err) => {
-          if(err) return frej(err);
-          supplySet().then((ans) => {
-            fres(ans.get(key));
-          });
-        });
-      });
-    });
+    const plan = supply.get(key).plan;
+    return new Promise((fres, frej) => cp.exec(
+      `~/heroku addons:destroy ${key} -a ${app} --confirm ${app} >/dev/null && `+
+      `~/heroku addons:create ${plan} --as ${key} -a ${app} >/dev/null && `+
+      `~/heroku config -s --app ${app} | grep ${key}=`,
+      (err, stdout) => {
+        const r = stdout.toString();
+        supply.get(key).value = r.substring(r.indexOf('=')+2, r.length-1);
+        log(`${supply.get(key).value}`);
+      }
+    ));
   };
 
-  var pendingRemove = function() {
+  const pendingRemove = function() {
     if(!unused.length || !pending.size) return;
-    var ref = pending.keys().next().value;
-    var fres = pending.get(ref);
+    const ref = pending.keys().next().value;
+    const fres = pending.get(ref);
     pending.delete(ref);
-    var key = unused.shift();
+    const key = unused.shift();
     removed.set(ref, key);
-    log(`pendingRemove:setRemoved(${ref}, ${key})`);
+    log(`pendingRemove:getUnused(${ref}, ${key})`);
     fres(supply.get(key));
     return ref;
   };
 
-  var add = function(ref) {
+  const add = function(ref) {
     if(pending.has(ref)) {
-      log(`add:deleteFromPending(${ref})`);
+      log(`add:removePending(${ref})`);
       pending.delete(ref);
     }
     if(removed.has(ref)) {
-      var key = removed.get(ref);
+      const key = removed.get(ref);
       removed.delete(ref);
-      log(`add:deleteFromRemoved(${ref}, ${key})`);
+      log(`add:addUnused(${ref}, ${key})`);
       return supplyReset(key).then(() => {
         unused.push(key);
         pendingRemove();
