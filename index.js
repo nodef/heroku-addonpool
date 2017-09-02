@@ -75,9 +75,10 @@ module.exports = function HerokuAddonPool(id, app, opt) {
     return new Promise((fres, frej) => cp.exec(
       `~/heroku addons:destroy ${key} -a ${app} --confirm ${app} >/dev/null && `+
       `~/heroku addons:create ${plan} --as ${key} -a ${app} >/dev/null && `+
-      `~/heroku config -s --app ${app} | grep ${key}=`,
+      `~/heroku config -s --app ${app} | grep ^${key}`,
       (err, stdout) => {
         const r = stdout.toString();
+        log(stdout.toString());
         supply.get(key).value = r.substring(r.indexOf('=')+2, r.length-1);
         log(`${supply.get(key).value}`);
       }
