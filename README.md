@@ -7,8 +7,8 @@ Manage Addon Pool of an App in Heroku.
 ```bash
 # NOTE:
 # The app with addons (pool app) must be different from the app
-# that uses the addons (pool) because heroku resets the pool app
-# each time a configuration variable is changed.
+# that uses the addons because heroku resets the pool app each
+# time a configuration variable is changed.
 ```
 ```bash
 # set heroku cli login in environment variables
