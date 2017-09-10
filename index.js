@@ -78,7 +78,10 @@ module.exports = function HerokuAddonPool(id, app, opt) {
       `~/heroku config -s -a ${app} | grep ^${key}`,
       (err, stdout) => {
         const r = stdout.toString();
-        fres(supply.get(key).value = r.substring(r.indexOf('=')+2, r.length-2));
+        console.log(`r=${r}`);
+        const value = r.substring(r.indexOf('=')+2, r.length-1);
+        console.log(`value=${value}`);
+        fres(supply.get(key).value = value);
       }
     ));
   };
