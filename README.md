@@ -1,5 +1,7 @@
 # heroku-addonpool
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/nodef/heroku-addonpool.svg)](https://greenkeeper.io/)
+
 [![NPM](https://nodei.co/npm/heroku-addonpool.png)](https://nodei.co/npm/heroku-addonpool/)
 
 Manage Addon Pool of an App in Heroku.
