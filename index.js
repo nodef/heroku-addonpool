@@ -2,6 +2,10 @@
 const cp = require('child_process');
 const _camel = require('lodash.camelcase');
 
+const RAPP = /\^[\w-]+$/;
+
+
+
 module.exports = function HerokuAddonPool(id, app, opt) {
   const unused = [];
   const supply = new Map();
@@ -10,6 +14,7 @@ module.exports = function HerokuAddonPool(id, app, opt) {
   opt = opt||{};
   opt.config = opt.config||/\S*/g;
   opt.log = opt.log||false;
+  if(!RAPP.test(app)) throw new Error('Bad app name');
 
   const log = function(msg) {
     if(opt.log) console.log(`${id}.${msg}`);

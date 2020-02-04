@@ -1,7 +1,3 @@
-# heroku-addonpool
-
-[![NPM](https://nodei.co/npm/heroku-addonpool.png)](https://nodei.co/npm/heroku-addonpool/)
-
 Manage Addon Pool of an App in Heroku.
 
 ```bash
