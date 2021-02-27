@@ -1,4 +1,4 @@
-Manage Addon Pool of an App in Heroku.
+Manages Addon Pool of an App in Heroku.
 
 ```bash
 # NOTE:
@@ -6,6 +6,10 @@ Manage Addon Pool of an App in Heroku.
 # that uses the addons because heroku resets the pool app each
 # time a configuration variable is changed.
 ```
+
+<br>
+<br>
+
 ```bash
 # set heroku cli login in environment variables
 HEROKU_CLI_LOGIN=youremail@domain.com
@@ -14,6 +18,9 @@ HEROKU_CLI_PASSWORD=yourpassword
 # also as of now you also need to purge cache before build
 heroku repo:purge_cache -a yourpoolapp
 ```
+
+<br>
+
 ```javascript
 var Pool = require('heroku-addonpool');
 // Pool(<id>, <app>, <opt>)
