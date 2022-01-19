@@ -1,29 +1,33 @@
 'use strict';
 const cp = require('child_process');
-const _camel = require('lodash.camelcase');
+const _camel         = require('lodash.camelcase');
+const herokuCliSetup = require('heroku-clisetup');
 
-const RAPP = /\^[\w-]+$/;
+const RAPP    = /^[\w-]+$/;
+const OPTIONS = {
+  config: /\S*/g,
+  log:    false
+};
 
 
 
-module.exports = function HerokuAddonPool(id, app, opt) {
-  const unused = [];
-  const supply = new Map();
+function HerokuAddonPool(id, app, o) {
+  const unused  = [];
+  const supply  = new Map();
   const removed = new Map();
   const pending = new Map();
-  opt = opt||{};
-  opt.config = opt.config||/\S*/g;
-  opt.log = opt.log||false;
+  var o = Object.assign({}, OPTIONS, o);
   if(!RAPP.test(app)) throw new Error('Bad app name');
+  herokuCliSetup();
 
-  const log = function(msg) {
-    if(opt.log) console.log(`${id}.${msg}`);
-  };
+  function log(msg) {
+    if(o.log) console.log(`${id}.${msg}`);
+  }
 
-  const supplySetOne = function(cfg) {
+  function supplySetOne(cfg) {
     return new Promise((fres, frej) => {
       const w = cfg.split('=');
-      if(w[0].search(opt.config)<0) return;
+      if(w[0].search(o.config)<0) return;
       const key = w[0].substring(0, w[0].length-4);
       const val = {'value': w[1].substring(1, w[1].length-1)};
       cp.exec(`~/heroku addons:info ${key} --app ${app}`, (err, stdout) => {
@@ -36,9 +40,9 @@ module.exports = function HerokuAddonPool(id, app, opt) {
         fres(key);
       });
     });
-  };
+  }
 
-  const supplySet = function() {
+  function supplySet() {
     return new Promise((fres, frej) => {
       cp.exec(`~/heroku config -s --app ${app}`, (err, stdout) => {
         if(err) return frej(err);
@@ -48,9 +52,9 @@ module.exports = function HerokuAddonPool(id, app, opt) {
         pro.then(() => fres(supply));
       });
     });
-  };
+  }
 
-  const setup = function() {
+  function setup() {
     log(`setup()`);
     return supplySet().then((ans) => {
       for(var key of supply.keys()) {
@@ -59,9 +63,9 @@ module.exports = function HerokuAddonPool(id, app, opt) {
       }
       return ans;
     });
-  };
+  }
 
-  const remove = function(ref) {
+  function remove(ref) {
     return new Promise((fres) => {
       if(unused.length===0) {
         log(`remove:addPending(${ref})`);
@@ -72,9 +76,9 @@ module.exports = function HerokuAddonPool(id, app, opt) {
       log(`remove:getUnused(${ref}, ${key})`);
       fres(supply.get(key));
     });
-  };
+  }
 
-  const supplyReset = function(key) {
+  function supplyReset(key) {
     log(`supplyReset(${key})`);
     const plan = supply.get(key).plan;
     return new Promise((fres, frej) => cp.exec(
@@ -86,9 +90,9 @@ module.exports = function HerokuAddonPool(id, app, opt) {
         fres(supply.get(key).value = r.substring(r.indexOf('=')+2, r.length-2));
       }
     ));
-  };
+  }
 
-  const pendingRemove = function() {
+  function pendingRemove() {
     if(!unused.length || !pending.size) return;
     const ref = pending.keys().next().value;
     const fres = pending.get(ref);
@@ -98,9 +102,9 @@ module.exports = function HerokuAddonPool(id, app, opt) {
     log(`pendingRemove:getUnused(${ref}, ${key})`);
     fres(supply.get(key));
     return ref;
-  };
+  }
 
-  const add = function(ref) {
+  function add(ref) {
     if(pending.has(ref)) {
       log(`add:removePending(${ref})`);
       pending.delete(ref);
@@ -116,7 +120,8 @@ module.exports = function HerokuAddonPool(id, app, opt) {
       });
     }
     return Promise.resolve(ref);
-  };
+  }
 
   return {add, remove, setup};
-};
+}
+module.exports = HerokuAddonPool;
