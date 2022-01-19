@@ -1,6 +1,6 @@
 {
   "name": "heroku-addonpool",
-  "version": "0.1.17",
+  "version": "0.1.20",
   "description": "Manages Addon Pool of an App in Heroku.",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/nodef/heroku-addonpool#readme",
   "dependencies": {
-    "heroku-clisetup": "^0.1.6",
+    "heroku-clisetup": "^0.1.13",
     "lodash.camelcase": "^4.3.0"
   }
 }
